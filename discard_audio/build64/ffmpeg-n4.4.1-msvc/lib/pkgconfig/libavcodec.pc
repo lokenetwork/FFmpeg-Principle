@@ -1,0 +1,14 @@
+prefix=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc
+exec_prefix=${prefix}
+libdir=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc/lib
+includedir=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 58.134.100
+Requires: 
+Requires.private: libswresample >= 3.9.100, libavutil >= 56.70.100
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -libpath:/usr/local/lib/x64 libx264.dll.lib mfplat.lib mfuuid.lib ole32.lib strmiids.lib ole32.lib user32.lib
+Cflags: -I${includedir}

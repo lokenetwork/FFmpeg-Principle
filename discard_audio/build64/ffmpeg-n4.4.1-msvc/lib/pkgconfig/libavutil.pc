@@ -1,0 +1,14 @@
+prefix=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc
+exec_prefix=${prefix}
+libdir=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc/lib
+includedir=/home/loken/ffmpeg/build64/ffmpeg-n4.4.1-msvc/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.70.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: user32.lib bcrypt.lib
+Cflags: -I${includedir}

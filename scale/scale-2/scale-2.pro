@@ -50,7 +50,9 @@ contains(QT_ARCH, x86_64) {
         CONFIG(release, debug|release){
            lib_install.path = $${OUT_PWD}/Release
         }
-        INSTALLS += lib_install
+        other_install.files += $$PWD/juren-30s.mp4
+        other_install.path += $${OUT_PWD}
+        INSTALLS += lib_install other_install
     }
 
     contains(LIBS_TYPE, msvc-static) {

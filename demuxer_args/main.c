@@ -33,6 +33,7 @@ int main()
     if ((t = av_dict_get(format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
           av_log(NULL, AV_LOG_INFO, "Option key: %s , value %s \n", t->key, t->value);
     }
+    av_dict_free(&format_opts);
 
    return 0;
 }

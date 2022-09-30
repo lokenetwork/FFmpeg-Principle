@@ -27,6 +27,7 @@ uint8_t* readFile(char* path, size_t* length)
     return data;
 }
 
+/* 读取 AVPacket 回调函数 */
 static int read_packet(void *opaque, uint8_t *buf, int buf_size)
 {
     BufferData *bd = (BufferData *)opaque;
@@ -44,6 +45,7 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
     return buf_size;
 }
 
+/* seek 回调函数 */
 static int64_t seek_in_buffer(void *opaque, int64_t offset, int whence)
 {
     BufferData *bd = (BufferData *)opaque;

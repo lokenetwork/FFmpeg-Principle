@@ -143,7 +143,6 @@ int main()
 
     AVCodecContext *enc_ctx = NULL;
 
-
     AVPacket *pkt = av_packet_alloc();
     AVFrame *frame = av_frame_alloc();
     AVPacket *pkt_out = av_packet_alloc();
@@ -224,7 +223,6 @@ retry:
                     pkt_out->dts = av_rescale_q_rnd(pkt_out->dts, fmt_ctx->streams[0]->time_base, st->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
                     pkt_out->duration = av_rescale_q_rnd(pkt_out->duration, fmt_ctx->streams[0]->time_base, st->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
 
-
                     ret = av_interleaved_write_frame(fmt_ctx_out, pkt_out);
                     if (ret < 0) {
                         printf("av_interleaved_write_frame faile %d \n",ret);
@@ -283,20 +281,17 @@ retry:
                         printf("open codec faile %d \n",ret);
                         return ret;
                     }
-
                     //正式打开输出文件
                     if ((ret = avio_open2(&fmt_ctx_out->pb, filename_out, AVIO_FLAG_WRITE,&fmt_ctx_out->interrupt_callback,NULL)) < 0) {
                         printf("avio_open2 fail %d \n",ret);
                         return ret;
                     }
-
                     //要先写入文件头部。
                     ret = avformat_write_header(fmt_ctx_out,NULL);
                     if (ret < 0) {
                         printf("avformat_write_header fail %d \n",ret);
                         return ret;
                     }
-
                 }
 
                 //往编码器发送 AVFrame，然后不断读取 AVPacket
@@ -331,15 +326,11 @@ retry:
                     }
                     av_packet_unref(pkt_out);
                 }
-
-
             }else{
                 printf("other fail \n");
                 return ret;
             }
         }
-
-
     }
 
     av_frame_free(&frame);

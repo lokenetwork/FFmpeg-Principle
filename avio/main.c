@@ -33,12 +33,13 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
     BufferData *bd = (BufferData *)opaque;
     buf_size = MIN((int)bd->size, buf_size);
 
+    printf("buf is %p \n",buf);
     if (!buf_size)
     {
         printf("no buf_size pass to read_packet,%d,%zu\n", buf_size, bd->size);
         return -1;
     }
-    printf("ptr in file:%p io.buffer ptr:%p, size:%zu,buf_size:%d\n", bd->ptr, buf, bd->size, buf_size);
+    //printf("ptr in file:%p io.buffer ptr:%p, size:%zu,buf_size:%d\n", bd->ptr, buf, bd->size, buf_size);
     memcpy(buf, bd->ptr, buf_size);
     bd->ptr += buf_size;
     bd->size -= buf_size; // left size in buffer
@@ -83,7 +84,6 @@ int main()
     bd.ori_ptr = input;
     bd.size =file_len;
     bd.file_size=file_len;
-    printf("input point is %p \n", input);
 
     //打开输入文件
     fmt_ctx = avformat_alloc_context();
@@ -93,7 +93,7 @@ int main()
     }
 
     avio_ctx_buffer = av_malloc(avio_ctx_buffer_size);
-    printf("avio_ctx_buffer:%p \n",avio_ctx_buffer);
+    printf("avio_ctx_buffer is %p \n",avio_ctx_buffer);
     if (!avio_ctx_buffer) {
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
@@ -334,6 +334,9 @@ retry:
         }
     }
 
+
+    av_free(&avio_ctx_buffer);
+    avio_context_free(&avio_ctx);
     av_frame_free(&frame);
     av_packet_free(&pkt);
     av_packet_free(&pkt_out);

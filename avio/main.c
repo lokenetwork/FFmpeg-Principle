@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include "libavformat/avformat.h"
+#define MIN(a,b) (a<b)?a:b
+typedef struct _BufferData
+{
+    uint8_t *ptr; // 指向buffer数据中 "还没被io上下文消耗的位置"
+    uint8_t *ori_ptr; // 也是指向buffer数据的指针,之所以定义ori_ptr,是用在自定义seek函数中
+    size_t size; // 视频buffer还没被消耗部分的大小,随着不断消耗,越来越小
+    size_t file_size; //原始视频buffer的大小,也是用在自定义seek函数中
+} BufferData;
 
-struct buffer_data {
-    uint8_t *ptr;
-    size_t size; ///< size left in the buffer
-};
 /* 把整个文件的内容全部读进去内存 */
-uint8_t* readFile(char* path, int* length)
+uint8_t* readFile(char* path, size_t* length)
 {
     FILE* pfile;
     uint8_t* data;
@@ -16,7 +20,6 @@ uint8_t* readFile(char* path, int* length)
         return NULL;
     fseek(pfile, 0, SEEK_END);
     *length = ftell(pfile);
-    printf("length:%d\n", *length);
     data = (uint8_t *)malloc((*length) * sizeof(uint8_t));
     rewind(pfile);
     *length = fread(data, 1, *length, pfile);
@@ -26,36 +29,60 @@ uint8_t* readFile(char* path, int* length)
 
 static int read_packet(void *opaque, uint8_t *buf, int buf_size)
 {
-    struct buffer_data *bd = (struct buffer_data *)opaque;
-    buf_size = FFMIN(buf_size, bd->size);
+    BufferData *bd = (BufferData *)opaque;
+    buf_size = MIN((int)bd->size, buf_size);
 
     if (!buf_size)
-        return AVERROR_EOF;
-    //printf("ptr:%p size:%zu\n", bd->ptr, bd->size);
-
-    /* copy internal buffer data to buf */
+    {
+        printf("no buf_size pass to read_packet,%d,%zu\n", buf_size, bd->size);
+        return -1;
+    }
+    printf("ptr in file:%p io.buffer ptr:%p, size:%zu,buf_size:%d\n", bd->ptr, buf, bd->size, buf_size);
     memcpy(buf, bd->ptr, buf_size);
-    bd->ptr  += buf_size;
-    bd->size -= buf_size;
-
+    bd->ptr += buf_size;
+    bd->size -= buf_size; // left size in buffer
     return buf_size;
+}
+
+static int64_t seek_in_buffer(void *opaque, int64_t offset, int whence)
+{
+    BufferData *bd = (BufferData *)opaque;
+    int64_t ret = -1;
+
+    printf("whence=%d , offset=%lld , file_size=%zu\n", whence, offset, bd->file_size);
+    switch (whence)
+    {
+    case AVSEEK_SIZE:
+        ret = bd->file_size;
+        break;
+    case SEEK_SET:
+        bd->ptr = bd->ori_ptr + offset;
+        bd->size = bd->file_size - offset;
+        ret = (int64_t)bd->ptr;
+        break;
+    }
+    return ret;
 }
 
 int main()
 {
-    int ret = 0; int err,file_len;
+    int ret = 0; int err;
     uint8_t* input;
     AVFormatContext *fmt_ctx = NULL;
     AVIOContext *avio_ctx = NULL;
     uint8_t *avio_ctx_buffer = NULL;
-    size_t avio_ctx_buffer_size = 4096;
+    int avio_ctx_buffer_size = 4096;
+    size_t file_len;
+    BufferData bd = {0};
 
-    struct buffer_data bd = { 0 };
     char filename[] = "juren-30s.mp4";
     input = readFile(filename,&file_len);
-    /* fill opaque structure used by the AVIOContext read callback */
-    bd.ptr  = input;
-    bd.size = file_len;
+    bd.ptr = input;
+    bd.ori_ptr = input;
+    bd.size =file_len;
+    bd.file_size=file_len;
+    printf("input point is %p \n", input);
+
 
     //打开输入文件
     fmt_ctx = avformat_alloc_context();
@@ -65,12 +92,13 @@ int main()
     }
 
     avio_ctx_buffer = av_malloc(avio_ctx_buffer_size);
+    printf("avio_ctx_buffer:%p \n",avio_ctx_buffer);
     if (!avio_ctx_buffer) {
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
     }
     avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
-                                  0, &bd, &read_packet, NULL, NULL);
+                                  0, &bd, &read_packet, NULL, &seek_in_buffer);
     if (!avio_ctx) {
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
@@ -84,8 +112,8 @@ int main()
 
     ret = avformat_find_stream_info(fmt_ctx, NULL);
     if (ret < 0) {
-       printf("avformat_find_stream_info file %d \n",ret);
-       return ret;
+        printf("avformat_find_stream_info file %d \n",ret);
+        return ret;
     }
 
     //打开解码器
@@ -120,7 +148,6 @@ int main()
     AVFrame *frame = av_frame_alloc();
     AVPacket *pkt_out = av_packet_alloc();
 
-    int frame_num = 0;
     int read_end = 0;
     for(;;){
         if( 1 == read_end ){
@@ -128,7 +155,6 @@ int main()
         }
 
         ret = av_read_frame(fmt_ctx, pkt);
-        printf("have read packet \n");
         //跳过不处理音频包
         if( 1 == pkt->stream_index ){
             av_packet_unref(pkt);
@@ -143,7 +169,7 @@ int main()
                 printf("read error code %d, %s \n",ret,av_err2str(ret));
                 return ENOMEM;
             }else{
-                retry:
+retry:
                 if (avcodec_send_packet(avctx, pkt) == AVERROR(EAGAIN)) {
                     printf("Receive_frame and send_packet both returned EAGAIN, which is an API violation.\n");
                     //这里可以考虑休眠 0.1 秒，返回 EAGAIN 通常是 ffmpeg 的内部 api 有bug
@@ -187,10 +213,10 @@ int main()
                         return ret;
                     }
                     if ( AVERROR_EOF == ret ){
-                       break;
+                        break;
                     }
                     //编码出 AVPacket ，先打印一些信息，然后把它写入文件。
-                    printf("pkt_out size : %d \n",pkt_out->size);
+                    //printf("pkt_out size : %d \n",pkt_out->size);
                     //设置 AVPacket 的 stream_index ，这样才知道是哪个流的。
                     pkt_out->stream_index = st->index;
                     //转换 AVPacket 的时间基为 输出流的时间基。
@@ -289,7 +315,7 @@ int main()
                         return ret;
                     }
                     //编码出 AVPacket ，先打印一些信息，然后把它写入文件。
-                    printf("pkt_out size : %d \n",pkt_out->size);
+                    //printf("pkt_out size : %d \n",pkt_out->size);
 
                     //设置 AVPacket 的 stream_index ，这样才知道是哪个流的。
                     pkt_out->stream_index = st->index;
@@ -299,7 +325,6 @@ int main()
                     pkt_out->duration = av_rescale_q_rnd(pkt_out->duration, fmt_ctx->streams[0]->time_base, st->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
 
                     ret = av_interleaved_write_frame(fmt_ctx_out, pkt_out);
-                    printf("here \n");
                     if (ret < 0) {
                         printf("av_interleaved_write_frame faile %d \n",ret);
                         return ret;

@@ -34,3 +34,4 @@
 
 *.pro.user
 /build-*/
+/scale/build-*/

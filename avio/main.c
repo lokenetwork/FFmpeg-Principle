@@ -83,7 +83,6 @@ int main()
     bd.file_size=file_len;
     printf("input point is %p \n", input);
 
-
     //打开输入文件
     fmt_ctx = avformat_alloc_context();
     if (!fmt_ctx) {

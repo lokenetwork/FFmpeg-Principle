@@ -6,20 +6,20 @@ struct buffer_data {
     size_t size; ///< size left in the buffer
 };
 /* 把整个文件的内容全部读进去内存 */
-char* readFile(char * path, int *length)
+uint8_t* readFile(char* path, int* length)
 {
-    FILE * pfile;
-    char * data;
+    FILE* pfile;
+    uint8_t* data;
 
     pfile = fopen(path, "rb");
     if (pfile == NULL)
         return NULL;
     fseek(pfile, 0, SEEK_END);
     *length = ftell(pfile);
-    data = (char *)malloc((*length + 1) * sizeof(char));
+    printf("length:%d\n", *length);
+    data = (uint8_t *)malloc((*length) * sizeof(uint8_t));
     rewind(pfile);
     *length = fread(data, 1, *length, pfile);
-    data[*length] = '\0';
     fclose(pfile);
     return data;
 }
@@ -31,7 +31,7 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
 
     if (!buf_size)
         return AVERROR_EOF;
-    printf("ptr:%p size:%zu\n", bd->ptr, bd->size);
+    //printf("ptr:%p size:%zu\n", bd->ptr, bd->size);
 
     /* copy internal buffer data to buf */
     memcpy(buf, bd->ptr, buf_size);
@@ -44,16 +44,18 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
 int main()
 {
     int ret = 0; int err,file_len;
-    char* input;
+    uint8_t* input;
     AVFormatContext *fmt_ctx = NULL;
     AVIOContext *avio_ctx = NULL;
-    uint8_t *buffer = NULL, *avio_ctx_buffer = NULL;
-    size_t buffer_size, avio_ctx_buffer_size = 4096;
+    uint8_t *avio_ctx_buffer = NULL;
+    size_t avio_ctx_buffer_size = 4096;
 
     struct buffer_data bd = { 0 };
     char filename[] = "juren-30s.mp4";
     input = readFile(filename,&file_len);
-
+    /* fill opaque structure used by the AVIOContext read callback */
+    bd.ptr  = input;
+    bd.size = file_len;
 
     //打开输入文件
     fmt_ctx = avformat_alloc_context();
@@ -80,6 +82,11 @@ int main()
         return err;
     }
 
+    ret = avformat_find_stream_info(fmt_ctx, NULL);
+    if (ret < 0) {
+       printf("avformat_find_stream_info file %d \n",ret);
+       return ret;
+    }
 
     //打开解码器
     AVCodecContext *avctx = avcodec_alloc_context3(NULL);
@@ -121,6 +128,7 @@ int main()
         }
 
         ret = av_read_frame(fmt_ctx, pkt);
+        printf("have read packet \n");
         //跳过不处理音频包
         if( 1 == pkt->stream_index ){
             av_packet_unref(pkt);
@@ -132,7 +140,7 @@ int main()
             avcodec_send_packet(avctx, NULL);
         }else {
             if( 0 != ret){
-                printf("read error code %d \n",ret);
+                printf("read error code %d, %s \n",ret,av_err2str(ret));
                 return ENOMEM;
             }else{
                 retry:
@@ -291,6 +299,7 @@ int main()
                     pkt_out->duration = av_rescale_q_rnd(pkt_out->duration, fmt_ctx->streams[0]->time_base, st->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
 
                     ret = av_interleaved_write_frame(fmt_ctx_out, pkt_out);
+                    printf("here \n");
                     if (ret < 0) {
                         printf("av_interleaved_write_frame faile %d \n",ret);
                         return ret;

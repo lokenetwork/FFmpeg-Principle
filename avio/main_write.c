@@ -33,16 +33,24 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
     BufferData *bd = (BufferData *)opaque;
     buf_size = MIN((int)bd->size, buf_size);
 
-    printf("buf is %p \n",buf);
     if (!buf_size)
     {
         printf("no buf_size pass to read_packet,%d,%zu\n", buf_size, bd->size);
         return -1;
     }
-    //printf("ptr in file:%p io.buffer ptr:%p, size:%zu,buf_size:%d\n", bd->ptr, buf, bd->size, buf_size);
     memcpy(buf, bd->ptr, buf_size);
     bd->ptr += buf_size;
     bd->size -= buf_size; // left size in buffer
+    return buf_size;
+}
+
+/* 写入 AVPacket 回调函数 */
+static int write_packet(void *opaque, uint8_t *buf, int buf_size)
+{
+    printf("write size = %d \n",buf_size);
+    uint8_t* output = (uint8_t *)opaque;
+    memcpy(output, buf, buf_size);
+    output += buf_size;
     return buf_size;
 }
 
@@ -71,9 +79,12 @@ int main()
 {
     int ret = 0; int err;
     uint8_t* input;
+    uint8_t* output;
     AVFormatContext *fmt_ctx = NULL;
     AVIOContext *avio_ctx = NULL;
     uint8_t *avio_ctx_buffer = NULL;
+    AVIOContext *avio_ctx_out = NULL;
+    uint8_t *avio_ctx_buffer_out = NULL;
     int avio_ctx_buffer_size = 4096;
     size_t file_len;
     BufferData bd = {0};
@@ -131,13 +142,27 @@ int main()
     }
 
     //打开输出文件容器
-    char filename_out[] = "juren-30s-5.mp4";
+    output = av_malloc(1024 * 1024 * 100);
+    avio_ctx_buffer_out = av_malloc(avio_ctx_buffer_size);
+    if (!avio_ctx_buffer_out) {
+        printf("error code %d \n",AVERROR(ENOMEM));
+        return ENOMEM;
+    }
+    avio_ctx_out = avio_alloc_context(avio_ctx_buffer_out, avio_ctx_buffer_size,
+                                  1, (void*)output, NULL, &write_packet, NULL);
+    if (!avio_ctx) {
+        printf("error code %d \n",AVERROR(ENOMEM));
+        return ENOMEM;
+    }
+
     AVFormatContext *fmt_ctx_out = NULL;
-    err = avformat_alloc_output_context2(&fmt_ctx_out, NULL, NULL, filename_out);
+    err = avformat_alloc_output_context2(&fmt_ctx_out, NULL, NULL, NULL);
     if (!fmt_ctx_out) {
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
     }
+    fmt_ctx_out->pb = avio_ctx_out;
+
     //添加一路流到容器上下文
     AVStream *st = avformat_new_stream(fmt_ctx_out, NULL);
     st->time_base = fmt_ctx->streams[0]->time_base;
@@ -283,10 +308,12 @@ retry:
                         return ret;
                     }
                     //正式打开输出文件
+                    /*
                     if ((ret = avio_open2(&fmt_ctx_out->pb, filename_out, AVIO_FLAG_WRITE,&fmt_ctx_out->interrupt_callback,NULL)) < 0) {
                         printf("avio_open2 fail %d \n",ret);
                         return ret;
                     }
+                    */
                     //要先写入文件头部。
                     ret = avformat_write_header(fmt_ctx_out,NULL);
                     if (ret < 0) {

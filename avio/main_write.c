@@ -150,15 +150,15 @@ int main()
     }
     avio_ctx_out = avio_alloc_context(avio_ctx_buffer_out, avio_ctx_buffer_size,
                                   1, (void*)output, NULL, &write_packet, NULL);
-    if (!avio_ctx) {
+    if (!avio_ctx_out) {
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
     }
 
     AVFormatContext *fmt_ctx_out = NULL;
-    err = avformat_alloc_output_context2(&fmt_ctx_out, NULL, NULL, NULL);
+    err = avformat_alloc_output_context2(&fmt_ctx_out, NULL, "flv", NULL);
     if (!fmt_ctx_out) {
-        printf("error code %d \n",AVERROR(ENOMEM));
+        printf("error code 33 %d \n",AVERROR(ENOMEM));
         return ENOMEM;
     }
     fmt_ctx_out->pb = avio_ctx_out;
@@ -364,6 +364,8 @@ retry:
 
     av_free(&avio_ctx_buffer);
     avio_context_free(&avio_ctx);
+    av_free(&avio_ctx_buffer_out);
+    avio_context_free(&avio_ctx_out);
     av_frame_free(&frame);
     av_packet_free(&pkt);
     av_packet_free(&pkt_out);

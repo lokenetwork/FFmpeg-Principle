@@ -8,7 +8,7 @@ LIBS_TYPE = msvc
 #HEADERS += xxx.h
 
 
-SOURCES += main_write.c
+SOURCES += main.c
 
 contains(QT_ARCH, i386) {
     message("32-bit")

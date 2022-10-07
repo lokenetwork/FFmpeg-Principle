@@ -129,8 +129,7 @@ int main()
                                 "buffer=video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d:frame_rate=%d/%d[main];"
                                 "[main]format=yuyv422[result];"
                                 "[result]buffersink",
-                               frame->width, frame->height, frame->format, tb.num,tb.den,sar.num, sar.den,fr.num, fr.den,
-                               frame->width/2,  frame->height/2);
+                               frame->width, frame->height, frame->format, tb.num,tb.den,sar.num, sar.den,fr.num, fr.den);
 
                     //解析滤镜字符串。
                     ret = avfilter_graph_parse2(filter_graph, args.str, &inputs, &outputs);

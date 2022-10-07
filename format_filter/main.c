@@ -46,6 +46,9 @@ int main()
     AVFrame *frame = av_frame_alloc();
     AVFrame *result_frame = av_frame_alloc();
 
+    const AVPixFmtDescriptor *origin_fmt = NULL;
+    const AVPixFmtDescriptor *result_fmt = NULL;
+
     int read_end = 0;
     int frame_num = 0;
     for(;;){
@@ -121,13 +124,14 @@ int main()
                     AVRational fr = av_guess_frame_rate(fmt_ctx, fmt_ctx->streams[0], NULL);
                     AVRational sar = frame->sample_aspect_ratio;
 
-                    printf("origin frame fmt is %d \n",frame->format);
+                    origin_fmt = av_pix_fmt_desc_get(frame->format);
+                    printf("origin frame fmt is %d,%s \n",frame->format,origin_fmt->name);
 
                     AVBPrint args;
                     av_bprint_init(&args, 0, AV_BPRINT_SIZE_AUTOMATIC);
                     av_bprintf(&args,
                                 "buffer=video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d:frame_rate=%d/%d[main];"
-                                "[main]format=yuyv422[result];"
+                                "[main]format=pix_fmts=yuyv422[result];"
                                 "[result]buffersink",
                                frame->width, frame->height, frame->format, tb.num,tb.den,sar.num, sar.den,fr.num, fr.den);
 
@@ -158,7 +162,8 @@ int main()
 
                 ret = av_buffersink_get_frame_flags(resultsink_ctx, result_frame,AV_BUFFERSRC_FLAG_PUSH);
                 if( ret >= 0 ){
-                    printf("result frame fmt is %d \n",result_frame->format);
+                    result_fmt = av_pix_fmt_desc_get(result_frame->format);
+                    printf("result frame fmt is %d,%s \n",result_frame->format,result_fmt->name);
                     //保存进去文件。
                     printf("save_yuv_to_file success\n");
                     save_yuv_to_file(result_frame,frame_num);

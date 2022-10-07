@@ -150,12 +150,14 @@ retry:
                     enc_ctx->field_order = AV_FIELD_PROGRESSIVE;
 
                     AVDictionary* codec_opts;
-                    av_dict_set(&codec_opts, "quality", "50", AV_DICT_MATCH_CASE);
+                    //flags 是编码器的公有属性
+                    av_dict_set(&codec_opts, "flags", "unaligned", AV_DICT_MATCH_CASE);
+                    //preset 是libx264编码器的私有属性。
+                    av_dict_set(&codec_opts, "preset", "superfast", AV_DICT_MATCH_CASE);
                     if ((ret = avcodec_open2(enc_ctx, encode, &codec_opts)) < 0) {
                         printf("open codec faile %d \n",ret);
                         return ret;
                     }
-
                     av_dict_free(&codec_opts);
                 }
 

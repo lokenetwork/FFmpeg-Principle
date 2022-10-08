@@ -13,5 +13,6 @@ int main(){
     while (opt = av_opt_next(enc_ctx->priv_data, opt)) {
         printf("private opt_name is %s \n", opt->name);
     }
+    avcodec_free_context(&enc_ctx);
     return 0;
 }

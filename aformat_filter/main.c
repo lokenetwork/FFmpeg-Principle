@@ -166,7 +166,7 @@ int main()
                 if( ret >= 0 ){
                     result_sample_fmt = av_get_sample_fmt_name(result_frame->format);
                     printf("result frame is %d,%s | %d | %d \n",
-                           result_frame->format,result_sample_fmt, result_frame->sample_rate, result_frame->channel_layout);
+                           result_frame->format,result_sample_fmt, result_frame->sample_rate, (int)result_frame->channel_layout);
 
                 }
 

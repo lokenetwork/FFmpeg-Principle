@@ -45,9 +45,12 @@ int main()
     AVFrame *result_frame = av_frame_alloc();
 
 
-    const char *origin_fmt = NULL;
-    const char *result_fmt = NULL;
-
+    const char *origin_sample_fmt = NULL;
+    const char *origin_sample_rate = NULL;
+    const char *origin_channel_layout = NULL;
+    const char *result_sample_fmt = NULL;
+    const char *result_sample_rate = NULL;
+    const char *result_channel_layout = NULL;
 
     int read_end = 0;
     int frame_num = 0;
@@ -121,17 +124,18 @@ int main()
                     // 因为 filter 的输入是 AVFrame ，所以 filter 的时间基就是 AVFrame 的时间基
                     AVRational tb = fmt_ctx->streams[0]->time_base;
 
-                    origin_fmt = av_get_sample_fmt_name(frame->format);
-                    printf("origin frame fmt is %d,%s \n",frame->format,origin_fmt);
+                    origin_sample_fmt = av_get_sample_fmt_name(frame->format);
+                    printf("origin frame is %d,%s | %d | %d \n",
+                           frame->format,origin_sample_fmt,frame->sample_rate,(int)frame->channel_layout);
 
                     AVBPrint args;
                     av_bprint_init(&args, 0, AV_BPRINT_SIZE_AUTOMATIC);
                     av_bprintf(&args,
                                 "abuffer=sample_rate=%d:sample_fmt=%s:channel_layout=%d:time_base=%d/%d[main];"
                                 "[main]aformat=sample_rates=%d:sample_fmts=%s:channel_layouts=%d[result];"
-                                "[result]buffersink",
-                               frame->sample_rate, origin_fmt, (int)frame->channel_layout, tb.num,tb.den,
-                               48000,"s64",AV_CH_FRONT_RIGHT);
+                                "[result]abuffersink",
+                               frame->sample_rate, origin_sample_fmt, (int)frame->channel_layout, tb.num,tb.den,
+                               44100,"s64",AV_CH_FRONT_RIGHT);
 
                     //解析滤镜字符串。
                     ret = avfilter_graph_parse2(filter_graph, args.str, &inputs, &outputs);
@@ -148,8 +152,8 @@ int main()
                     }
 
                     //根据 名字 找到 AVFilterContext
-                    mainsrc_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_buffer_0");
-                    resultsink_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_buffersink_2");
+                    mainsrc_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_abuffer_0");
+                    resultsink_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_abuffersink_2");
                 }
 
                 ret = av_buffersrc_add_frame_flags(mainsrc_ctx, frame,AV_BUFFERSRC_FLAG_PUSH);
@@ -160,8 +164,9 @@ int main()
 
                 ret = av_buffersink_get_frame_flags(resultsink_ctx, result_frame,AV_BUFFERSRC_FLAG_PUSH);
                 if( ret >= 0 ){
-                    result_fmt = av_get_sample_fmt_name(result_frame->format);
-                    printf("result frame fmt is %d,%s \n",result_frame->format,result_fmt);
+                    result_sample_fmt = av_get_sample_fmt_name(result_frame->format);
+                    printf("result frame is %d,%s | %d | %d \n",
+                           result_frame->format,result_sample_fmt, result_frame->sample_rate, result_frame->channel_layout);
 
                 }
 

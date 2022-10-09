@@ -130,6 +130,7 @@ int main()
 
                 //减少引用，释放内存。
                 av_frame_unref(frame);
+                av_frame_unref(result_frame);
 
                 frame_num++;
                 //只处理 10 张图片

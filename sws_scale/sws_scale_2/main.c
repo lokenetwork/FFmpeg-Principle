@@ -3,8 +3,9 @@
 #include "libswscale/swscale.h"
 #include "libavutil/bprint.h"
 #include "libavutil/pixdesc.h"
+#include "libavutil/imgutils.h"
 
-int save_rgb_to_file(AVFrame *frame, int num);
+int save_rgb_to_file(uint8_t *pixels[4], int pitch[4], int height, int num);
 
 int main()
 {
@@ -42,12 +43,11 @@ int main()
     }
 
     int sws_flags = SWS_BICUBIC;
-    AVFrame* result_frame = av_frame_alloc();
-    //定义 AVFrame 的格式，宽高。
-    result_frame->format = AV_PIX_FMT_BGRA;
-    result_frame->width = 200;
-    result_frame->height = 100;
-
+    int result_format = AV_PIX_FMT_BGRA;
+    int result_width = 300;
+    int result_height = 300;
+    //确定内存的大小
+    int buf_size = av_image_get_buffer_size(result_format, result_width, result_height, 1);
 
     for(;;){
         if( 1 == read_end ){
@@ -105,10 +105,11 @@ int main()
                 read_end = 1;
                 break;
             }else if( ret >= 0 ){
+                //初始化 sws 实例
                 if( NULL == img_convert_ctx ){
                     img_convert_ctx = sws_getCachedContext(img_convert_ctx,
                                                            frame->width, frame->height, frame->format,
-                                                           result_frame->width, result_frame->height, result_frame->format,
+                                                           result_width, result_height, result_format,
                                                            sws_flags, NULL, NULL, NULL);
                     if (NULL == img_convert_ctx) {
                         av_log(NULL, AV_LOG_FATAL, "no memory 1\n");
@@ -116,21 +117,26 @@ int main()
                     }
                 }
 
-                //分配 frame 里面的 buffer 内存。
-                ret = av_frame_get_buffer(result_frame, 1);
-                if( 0 != ret ){
+                //申请内存
+                uint8_t* buffer = (uint8_t *)av_malloc(buf_size);
+                if( !buffer ){
                     av_log(NULL, AV_LOG_FATAL, "no memory 2\n");
                     return ENOMEM;
                 }
+                uint8_t *pixels[4];
+                int pitch[4];
+                //把内存映射到数组里面
+                av_image_fill_arrays(pixels, pitch, buffer, result_format, result_width, result_height, 1);
 
                 sws_scale(img_convert_ctx,
                           (const uint8_t * const *)frame->data, frame->linesize, 0, frame->height,
-                          result_frame->data, result_frame->linesize);
+                          pixels,pitch);
 
-                save_rgb_to_file(result_frame,frame_num);
+                save_rgb_to_file(pixels, pitch, result_height, frame_num);
 
                 //减少引用，释放内存。
                 av_frame_unref(frame);
+                av_freep(&buffer);
 
                 frame_num++;
                 //只处理 10 张图片
@@ -159,7 +165,7 @@ int main()
     return 0;
 }
 
-int save_rgb_to_file(AVFrame *frame, int num){
+int save_rgb_to_file(uint8_t *pixels[4], int pitch[4], int height, int num){
     //拼接文件名
     char pic_name[200] = {0};
     sprintf(pic_name,"./rgba_8888_%d.yuv",num);
@@ -167,8 +173,9 @@ int save_rgb_to_file(AVFrame *frame, int num){
     //写入文件
     FILE *fp = NULL;
     fp = fopen(pic_name, "wb+");
-    fwrite(frame->data[0] , 1, frame->linesize[0] * frame->height, fp);
+    fwrite(pixels[0] , 1, pitch[0] * height, fp);
     fclose(fp);
+    printf("save success \n");
     return 0;
 }
 

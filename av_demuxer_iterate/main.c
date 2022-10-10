@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include "libavformat/avformat.h"
-#include "libavutil/opt.h"
+
 int main(){
-    AVCodec *encode = avcodec_find_encoder(AV_CODEC_ID_H264);
-    AVCodecContext* enc_ctx = avcodec_alloc_context3(encode);
-    const AVOption *opt = NULL;
-
-    while (opt = av_opt_next(enc_ctx, opt)) {
-        printf("common opt_name is %s \n", opt->name);
+    void* ifmt_opaque = NULL;
+    const AVInputFormat *ifmt  = NULL;
+    while ((ifmt = av_demuxer_iterate(&ifmt_opaque))) {
+        printf("ifmt name is %s \n",ifmt->name);
     }
 
-    while (opt = av_opt_next(enc_ctx->priv_data, opt)) {
-        printf("private opt_name is %s \n", opt->name);
+    void* ofmt_opaque = NULL;
+    const AVOutputFormat *ofmt  = NULL;
+    while ((ofmt = av_muxer_iterate(&ofmt_opaque))) {
+        printf("ofmt name is %s \n",ofmt->name);
     }
-    avcodec_free_context(&enc_ctx);
     return 0;
 }

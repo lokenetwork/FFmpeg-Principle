@@ -113,8 +113,9 @@ int main()
                 //这两个变量在本文里没有用的，只是要传进去。
                 AVFilterInOut *inputs, *outputs;
                 origin_sample_fmt = av_get_sample_fmt_name(frame->format);
-                printf("origin frame is %d,%s | %d | %d ,pts:%d, nb_samples:%d \n",
-                       frame->format,origin_sample_fmt,frame->sample_rate,(int)frame->channel_layout,(int)frame->pts,frame->nb_samples);
+                printf("origin frame is %d,%s | %d | %d ,pts:%d, nb_samples:%d, duration:%d \n",
+                       frame->format,origin_sample_fmt,frame->sample_rate,(int)frame->channel_layout,
+                       (int)frame->pts,(int)frame->pkt_duration);
 
                 if( NULL == filter_graph ){
                     //初始化滤镜
@@ -164,8 +165,9 @@ int main()
                 ret = av_buffersink_get_frame_flags(resultsink_ctx, result_frame,AV_BUFFERSRC_FLAG_PUSH);
                 if( ret >= 0 ){
                     result_sample_fmt = av_get_sample_fmt_name(result_frame->format);
-                    printf("result frame is %d,%s | %d | %d ,pts:%d, nb_samples:%d \n",
-                           result_frame->format,result_sample_fmt, result_frame->sample_rate, (int)result_frame->channel_layout, (int)result_frame->pts, result_frame->nb_samples);
+                    printf("result frame is %d,%s | %d | %d ,pts:%d, nb_samples:%d , duration:%d \n",
+                           result_frame->format,result_sample_fmt, result_frame->sample_rate, (int)result_frame->channel_layout,
+                           (int)result_frame->pts, result_frame->nb_samples, (int)result_frame->pkt_duration);
                 }
 
                 frame_num++;

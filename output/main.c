@@ -2,9 +2,7 @@
 #include "libavformat/avformat.h"
 int main()
 {
-
     int ret = 0; int err;
-
 
     //打开输入文件
     char filename[] = "juren-30s.mp4";
@@ -249,12 +247,17 @@ int main()
     av_packet_free(&pkt);
     av_packet_free(&pkt_out);
 
+
+
     //关闭编码器，解码器。
     avcodec_close(avctx);
     avcodec_close(enc_ctx);
 
     //释放容器内存。
     avformat_free_context(fmt_ctx);
+
+    //必须调 avio_closep ，要不可能会没把数据写进去，会是 0kb
+    avio_closep(&fmt_ctx_out->pb);
     avformat_free_context(fmt_ctx_out);
     printf("done \n");
 

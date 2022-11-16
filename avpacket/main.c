@@ -35,7 +35,7 @@ int main()
             printf("stream 1 type : %d \n",fmt_ctx->streams[1]->codecpar->codec_type);
             printf("stream_index : %d \n",pkt->stream_index);
             printf("duration : %I64d ,time_base : %d/%d \n",pkt->duration,
-                   fmt_ctx->streams[1]->time_base.num,fmt_ctx->streams[0]->time_base.den);
+                   fmt_ctx->streams[0]->time_base.num,fmt_ctx->streams[0]->time_base.den);
             printf("size : %d \n",pkt->size);
             printf("pos : %I64d \n",pkt->pos);
             printf("data : %x %x %x %x %x %x %x \n",

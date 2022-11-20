@@ -2,7 +2,6 @@
 #include "libavformat/avformat.h"
 int main()
 {
-
     AVFormatContext *fmt_ctx = NULL;
     int type = 1;
     int ret = 0;
@@ -21,8 +20,6 @@ int main()
         printf("can not open file %d \n",err);
         return err;
     }
-
-
 
     if( 1 == type ){
 
@@ -56,11 +53,56 @@ int main()
                 continue;
             }
             if ( AVERROR_EOF == ret) {
+                //已经读完文件
                 //读取完文件，这时候 pkt 的 data 跟 size 应该是 null
+                //冲刷解码器
                 avcodec_send_packet(avctx, pkt);
-                //省略处理读取错误的情况
+                //释放 pkt 里面的编码数据
+                av_packet_unref(pkt);
 
-                return ret;
+                //循环不断从解码器读数据，直到没有数据可读。
+                for(;;){
+                    //读取 AVFrame
+                    ret = avcodec_receive_frame(avctx, frame);
+                    /* 释放 frame 里面的YUV数据，
+                     * 由于 avcodec_receive_frame 函数里面会调用 av_frame_unref，所以下面的代码可以注释。
+                     * 所以我们不需要 手动 unref 这个 AVFrame
+                     * */
+                    //av_frame_unref(frame);
+
+                    if( AVERROR(EAGAIN) == ret ){
+                        //提示 EAGAIN 代表 解码器 需要 更多的 AVPacket
+                        //跳出 第一层 for，让 解码器拿到更多的 AVPacket
+                        break;
+                    }else if( AVERROR_EOF == ret ){
+                        /* 提示 AVERROR_EOF 代表之前已经往 解码器发送了一个 data 跟 size 都是 NULL 的 AVPacket
+                         * 发送 NULL 的 AVPacket 是提示解码器把所有的缓存帧全都刷出来。
+                         * 通常只有在 读完输入文件才会发送 NULL 的 AVPacket，或者需要用现有的解码器解码另一个的视频流才会这么干。
+                         *
+                         * */
+
+                        //跳出 第二层 for，文件已经解码完毕。
+                        read_end = 1;
+                        break;
+                    }else if( ret >= 0 ){
+
+                        //解码出一帧 YUV 数据，打印一些信息。
+                        printf("decode success ----\n");
+                        printf("width : %d , height : %d \n",frame->width,frame->height);
+                        printf("pts : %I64d , duration : %I64d \n",frame->pts,frame->pkt_duration);
+                        printf("format : %d \n",frame->format);
+                        printf("key_frame : %d \n",frame->key_frame);
+                        printf("AVPictureType : %d \n",frame->pict_type);
+                        int num = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, 1920, 1080, 1);
+                        printf("num : %d , \n",num);
+
+
+                    }else{
+                        printf("other fail \n");
+                        return ret;
+                    }
+                }
+
             }else if( 0 == ret){
                 retry:
                 if (avcodec_send_packet(avctx, pkt) == AVERROR(EAGAIN)) {

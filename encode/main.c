@@ -111,7 +111,7 @@ int main()
                     printf("pkt_out size : %d \n",pkt_out->size);
                 }
 
-                //跳出 第二层 for，文件已经解码完毕。
+                //跳出 第二层 for，编码结束了。
                 read_end = 1;
                 break;
             }else if( ret >= 0 ){

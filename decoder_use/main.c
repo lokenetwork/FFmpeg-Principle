@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+
 int main()
 {
     AVFormatContext *fmt_ctx = NULL;

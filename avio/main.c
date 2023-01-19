@@ -37,7 +37,7 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size)
     if (!buf_size)
     {
         printf("no buf_size pass to read_packet,%d,%zu\n", buf_size, bd->size);
-        return -1;
+        return EAGAIN;
     }
     //printf("ptr in file:%p io.buffer ptr:%p, size:%zu,buf_size:%d\n", bd->ptr, buf, bd->size, buf_size);
     memcpy(buf, bd->ptr, buf_size);

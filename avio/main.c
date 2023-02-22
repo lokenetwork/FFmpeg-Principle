@@ -72,6 +72,7 @@ int main()
     int ret = 0; int err;
     uint8_t* input;
     AVFormatContext *fmt_ctx = NULL;
+    AVInputFormat *file_iformat = NULL;
     AVIOContext *avio_ctx = NULL;
     uint8_t *avio_ctx_buffer = NULL;
     int avio_ctx_buffer_size = 4096;
@@ -104,9 +105,12 @@ int main()
         printf("error code %d \n",AVERROR(ENOMEM));
         return ENOMEM;
     }
+    //avio_ctx->seekable = 0;
     fmt_ctx->pb = avio_ctx;
 
-    if((err = avformat_open_input(&fmt_ctx, NULL,NULL,NULL)) < 0){
+    file_iformat = av_find_input_format("mp4");
+
+    if((err = avformat_open_input(&fmt_ctx, NULL,file_iformat,NULL)) < 0){
         printf("can not open file %d \n",err);
         return err;
     }

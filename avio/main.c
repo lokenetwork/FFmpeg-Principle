@@ -10,6 +10,7 @@ typedef struct _BufferData
 } BufferData;
 
 /* 把整个文件的内容全部读进去内存 */
+uint8_t* readFile(char* path, size_t* length);
 uint8_t* readFile(char* path, size_t* length)
 {
     FILE* pfile;

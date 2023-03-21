@@ -42,7 +42,7 @@ int main() {
 
     /* 原理分析 */
     char *my_argv2 = malloc(5 * sizeof(char *));
-    char **my_argv_p2 = &my_argv2;
+    char **my_argv_p2 = (char**)my_argv2;
 
     printf("my_argv2     is %p \n", my_argv2);
     printf("my_argv2 + 1 is %p \n", my_argv2 + 1);

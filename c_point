@@ -1,0 +1,57 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+char *av_strdup(const char *s) {
+    char *ptr = NULL;
+    if (s) {
+        size_t len = strlen(s) + 1;
+        ptr = calloc(1, len);
+        if (ptr)
+            memcpy(ptr, s, len);
+    }
+    return ptr;
+}
+
+void my_pthread_create(void *argv) {
+    int i;
+    char **my_argv = (char **) argv;
+    for (i = 0; i < 10000; i++) {
+        if (my_argv[i]) {
+            printf("str is %s \n", my_argv[i]);
+        } else {
+            break;
+        }
+    }
+}
+
+int main() {
+
+    int n = 3;
+
+    char **my_argv_p = (char **) malloc(5 * sizeof(char *));
+
+    my_argv_p[0] = av_strdup("mix_cpp_demo.exe");
+    my_argv_p[1] = av_strdup("-re");
+    my_argv_p[2] = av_strdup("-thread_queue_size");
+    my_argv_p[3] = av_strdup("0");
+    /* 省略其他参数的赋值 */
+    my_argv_p[4] = NULL;
+
+    my_pthread_create(my_argv_p);
+
+    /* 原理分析 */
+    char *my_argv2 = malloc(5 * sizeof(char *));
+    char **my_argv_p2 = &my_argv2;
+
+    printf("my_argv2     is %p \n", my_argv2);
+    printf("my_argv2 + 1 is %p \n", my_argv2 + 1);
+    printf("my_argv2[1]  is %p \n", my_argv2 + 1);
+
+    printf("my_argv_p2     is %p \n", my_argv_p2);
+    printf("my_argv_p2 + 1 is %p \n", my_argv_p2 + 1);
+    printf("my_argv_p2[1]  is %p \n", my_argv_p2[1]);
+
+
+    return 0;
+}

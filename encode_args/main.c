@@ -149,7 +149,7 @@ retry:
                      */
                     enc_ctx->field_order = AV_FIELD_PROGRESSIVE;
 
-                    AVDictionary* codec_opts;
+                    AVDictionary* codec_opts = NULL;
                     //flags 是编码器的公有属性
                     av_dict_set(&codec_opts, "flags", "unaligned", AV_DICT_MATCH_CASE);
                     //preset 是libx264编码器的私有属性。

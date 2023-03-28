@@ -21,7 +21,7 @@ int main()
             printf("error code %d \n",err);
         }else{
             printf("open success \n");
-            printf("filename - %s \n",fmt_ctx->filename);
+            printf("filename - %s \n",fmt_ctx->url);
             printf("duration - %I64d \n",fmt_ctx->duration);
             printf("nb_streams - %u \n",fmt_ctx->nb_streams);
             for( int i=0; i < fmt_ctx->nb_streams; i++ ){
@@ -43,7 +43,7 @@ int main()
         }else{
             avformat_find_stream_info(fmt_ctx,NULL);
             printf("open success \n");
-            printf("filename - %s \n",fmt_ctx->filename);
+            printf("filename - %s \n",fmt_ctx->url);
             printf("duration - %I64d \n",fmt_ctx->duration);
             printf("nb_streams - %u \n",fmt_ctx->nb_streams);
             for( int i=0; i < fmt_ctx->nb_streams; i++ ){

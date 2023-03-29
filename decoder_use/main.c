@@ -194,6 +194,8 @@ int main()
         //关闭解码器。
         avcodec_close(avctx);
 
+        avformat_close_input(&fmt_ctx);
+
     }
 
 

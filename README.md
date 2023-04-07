@@ -19,7 +19,7 @@
 16. `sws_scale` 是《[sws_scale图像缩放函数介绍](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/sws_scale.html)》的示例代码
 17. `swr_convert` 是《[swr_convert音频重采样介绍](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/swr_convert.html)》的示例代码
 18. `discard_audio` 是《[FFmpeg丢弃音频流](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/discard_stream.html)》的示例代码
-19. `av_demuxer_iterate` 是《[FFmpeg支持哪些封装格式]()》的示例代码
+19. `av_demuxer_iterate` 是《[FFmpeg支持哪些封装格式](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/av_demuxer_iterate.html)》的示例代码
 20. `av_opt_next` 是《[如何遍历编码器支持的参数](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/av_opt_next.html)》的示例代码
 21. `avformat_seek_file` 是《[avformat_seek_file函数介绍](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/avformat_seek_file.html)》的示例代码
 22. `avio` 是《[FFmpeg内存IO模式](https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/avio.html)》的示例代码

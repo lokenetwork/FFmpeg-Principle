@@ -154,6 +154,7 @@ int main()
                             //printf(" U size : %d \n",frame->linesize[1]);
                             //printf(" V size : %d \n",frame->linesize[2]);
 
+
                             /*
                             //修改 yuv
                             for(int tt=0; tt < 5 ;tt++){
@@ -167,9 +168,9 @@ int main()
                             //写入文件
                             FILE *fp = NULL;
                             fp = fopen(yuv_pic_name, "w+");
-                            fwrite(frame->data[0] , 1, frame->linesize[0] * frame->height, fp);
-                            fwrite(frame->data[1] , 1, frame->linesize[1] * frame->height/2, fp);
-                            fwrite(frame->data[2] , 1, frame->linesize[2] * frame->height/2, fp);
+                            fwrite(frame->data[0] , 1, frame->width * frame->height, fp);
+                            fwrite(frame->data[1] , 1, frame->width/2 * frame->height/2, fp);
+                            fwrite(frame->data[2] , 1, frame->width/2 * frame->height/2, fp);
                             fclose(fp);
 
                             frame_num++;
@@ -177,6 +178,7 @@ int main()
                                 return 99;
                             }
                             */
+
 
                         }else{
                             printf("other fail \n");

@@ -193,8 +193,8 @@ int main()
         av_frame_free(&frame);
         av_packet_free(&pkt);
 
-        //关闭解码器。
-        avcodec_close(avctx);
+        //释放解码器上下文。
+        avcodec_free_context(&avctx);
 
         avformat_close_input(&fmt_ctx);
 

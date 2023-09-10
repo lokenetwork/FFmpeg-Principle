@@ -33,6 +33,7 @@ contains(QT_ARCH, x86_64) {
     }
 
     contains(LIBS_TYPE, msvc) {
+        QMAKE_CFLAGS += /utf-8
         INCLUDEPATH += $$PWD/build64/ffmpeg-n4.4.1-msvc/include
         LIBS += $$PWD/build64/ffmpeg-n4.4.1-msvc/bin/ffmpeg.lib
         lib_install.files += $$PWD/build64/ffmpeg-n4.4.1-msvc/bin/*.dll

@@ -123,7 +123,7 @@ retry:
                         //不改变声道布局
                         tgt_channels = frame->channels;
                         out_count = (int64_t)frame->nb_samples * tgt_freq / frame->sample_rate + 256;
-                        out_size  = av_samples_get_buffer_size(NULL, tgt_channels, out_count, tgt_fmt, 0);
+                        out_size  = av_samples_get_buffer_size(NULL, tgt_channels, out_count, tgt_fmt, 1);
                         out = av_malloc(out_size);
                         //注意，因为 音频可能有超过 9 声道的数据，所以要用 extended_data;
                         const uint8_t **in = (const uint8_t **)frame->extended_data;
